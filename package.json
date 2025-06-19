@@ -1,0 +1,24 @@
+{
+  "name": "jarmuz",
+  "version": "0.2.0",
+  "description": "Opinionated build automation tool",
+  "main": "src/index.mjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/intentee/jarmuz.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/intentee/jarmuz/issues"
+  },
+  "homepage": "https://github.com/intentee/jarmuz#readme",
+  "dependencies": {
+    "chokidar": "^4.0.3",
+    "minimatch": "^10.0.3"
+  },
+  "sideEffects": false
+}
