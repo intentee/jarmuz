@@ -19,7 +19,7 @@ export function spawner(build) {
     running.clear();
   }
 
-  function register(proc) {
+  function register({ background, proc }) {
     running.add(proc);
 
     proc.once("spawn", function () {
@@ -35,27 +35,45 @@ export function spawner(build) {
         );
         running.delete(proc);
 
-        resolve(code === 0);
+        if (!background) {
+          resolve(code === 0);
+        }
       });
+
+      if (background) {
+        resolve();
+      }
     });
   }
 
   return basic(async function ({ buildId, baseDirectory, ...rest }) {
     await abort();
 
-    function command(exec) {
+    function registerProc({ background, exec }) {
       const [command, ...args] = parseArgsStringToArgv(exec);
       const proc = spawn(command, args, {
         cwd: baseDirectory,
         stdio: "inherit",
       });
 
-      return register(proc);
+      return register({
+        background,
+        proc,
+      });
+    }
+
+    function background(exec) {
+      return registerProc({ background: true, exec });
+    }
+
+    function command(exec) {
+      return registerProc({ background: false, exec });
     }
 
     return build({
-      buildId,
+      background,
       baseDirectory,
+      buildId,
       command,
       register,
       ...rest,
