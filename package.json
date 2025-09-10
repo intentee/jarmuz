@@ -20,7 +20,6 @@
   },
   "homepage": "https://github.com/intentee/jarmuz#readme",
   "dependencies": {
-    "@vscode/ripgrep": "^1.15.13",
     "chokidar": "^4.0.3",
     "cross-spawn": "^7.0.6",
     "minimatch": "^10.0.3",
