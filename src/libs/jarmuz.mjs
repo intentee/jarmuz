@@ -1,6 +1,6 @@
 import chokidar from "chokidar";
 import { minimatch } from "minimatch";
-import { randomUUID } from "node:crypto";
+import { nanoid } from "nanoid";
 
 import { managePipeline } from "./manage-pipeline.mjs";
 import { manageWorkers } from "./manage-workers.mjs";
@@ -53,6 +53,23 @@ export function jarmuz({
       const toBeScheduled = new Set();
       const watcher = chokidar.watch(watch);
 
+      function schedule(name) {
+        if (once) {
+          toBeScheduled.add(name);
+        } else {
+          pipelineManager.schedule(baseDirectory, name, nanoid(), once);
+        }
+      }
+
+      decider({
+        baseDirectory,
+        initial: true,
+        matches() {
+          return false;
+        },
+        schedule,
+      });
+
       watcher.on("all", function (event, path) {
         if (
           ignore.some(function (pattern) {
@@ -63,18 +80,12 @@ export function jarmuz({
         }
 
         decider({
-          baseDirectory: baseDirectory,
+          baseDirectory,
+          initial: false,
           matches(pattern) {
             return minimatch(path, pattern);
           },
-          path: path,
-          schedule(name) {
-            if (once) {
-              toBeScheduled.add(name);
-            } else {
-              pipelineManager.schedule(baseDirectory, name, randomUUID(), once);
-            }
-          },
+          schedule,
         });
       });
       watcher.on("ready", async function () {
@@ -84,7 +95,7 @@ export function jarmuz({
 
         await watcher.close();
 
-        const buildId = randomUUID();
+        const buildId = nanoid();
 
         for (const name of toBeScheduled) {
           pipelineManager.schedule(baseDirectory, name, buildId, once);

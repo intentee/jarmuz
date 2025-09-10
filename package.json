@@ -1,6 +1,6 @@
 {
   "name": "jarmuz",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Opinionated build automation tool",
   "exports": {
     ".": "./src/index.mjs",
@@ -24,6 +24,7 @@
     "chokidar": "^4.0.3",
     "cross-spawn": "^7.0.6",
     "minimatch": "^10.0.3",
+    "nanoid": "^5.1.5",
     "string-argv": "^0.3.2"
   },
   "sideEffects": false,
