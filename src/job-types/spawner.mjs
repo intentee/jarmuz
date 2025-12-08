@@ -1,12 +1,17 @@
 import spawn from "cross-spawn";
+import { exec as nodeExec } from "node:child_process";
 import { parseArgsStringToArgv } from "string-argv";
 
 import { basic } from "./basic.mjs";
 
 export function spawner(build) {
+  let abortController = new AbortController();
   const running = new Set();
 
   async function abort() {
+    abortController.abort();
+    abortController = new AbortController();
+
     for (const proc of running) {
       await new Promise(function (resolve) {
         console.debug(`jarmuz: Killing Process(${proc.pid})...`);
@@ -70,11 +75,35 @@ export function spawner(build) {
       return registerProc({ background: false, exec });
     }
 
+    function exec(command) {
+      return new Promise(function (resolve, reject) {
+        nodeExec(
+          command,
+          {
+            cwd: baseDirectory,
+            encoding: "utf-8",
+            signal: abortController.signal,
+          },
+          function (error, stdout, stderr) {
+            if (error) {
+              reject(error);
+            } else {
+              resolve({
+                stderr,
+                stdout,
+              });
+            }
+          },
+        );
+      });
+    }
+
     return build({
       background,
       baseDirectory,
       buildId,
       command,
+      exec,
       register,
       ...rest,
     });
