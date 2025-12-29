@@ -11,7 +11,7 @@ export function jarmuz({
   ignore = [],
   once = false,
   pipeline,
-  watch,
+  watch = ["."],
 }) {
   const state = {
     pending: new Map(),
