@@ -6,7 +6,7 @@ import { basic } from "./basic.mjs";
 const running = new Set();
 
 export function persist(build) {
-  function run({ args, baseDirectory, command, cwd }) {
+  function run({ args, baseDirectory, command }) {
     const proc = spawn(command, args, {
       cwd: baseDirectory,
       stdio: "inherit",
@@ -27,7 +27,6 @@ export function persist(build) {
         args,
         baseDirectory,
         command,
-        cwd,
       });
     });
   }
@@ -46,7 +45,6 @@ export function persist(build) {
         args,
         baseDirectory,
         command,
-        cwd: baseDirectory,
       });
     }
 

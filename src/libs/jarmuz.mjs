@@ -34,12 +34,7 @@ export function jarmuz({
       },
       onSuccess({ baseDirectory, buildId }) {
         if (
-          !pipelineManager.scheduleSuccessor(
-            baseDirectory,
-            buildId,
-            name,
-            once,
-          ) &&
+          !pipelineManager.scheduleSuccessor(baseDirectory, buildId, name) &&
           once
         ) {
           workers.stopAll();
@@ -57,7 +52,7 @@ export function jarmuz({
         if (once) {
           toBeScheduled.add(name);
         } else {
-          pipelineManager.schedule(baseDirectory, name, nanoid(), once);
+          pipelineManager.schedule(baseDirectory, name, nanoid());
         }
       }
 
@@ -70,7 +65,7 @@ export function jarmuz({
         schedule,
       });
 
-      watcher.on("all", function (event, path) {
+      watcher.on("all", function (_event, path) {
         if (
           ignore.some(function (pattern) {
             return minimatch(path, pattern);
@@ -98,7 +93,7 @@ export function jarmuz({
         const buildId = nanoid();
 
         for (const name of toBeScheduled) {
-          pipelineManager.schedule(baseDirectory, name, buildId, once);
+          pipelineManager.schedule(baseDirectory, name, buildId);
         }
       });
     },

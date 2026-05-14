@@ -40,11 +40,11 @@ export function managePipeline(state, scheduler, pipeline) {
 
   return Object.freeze({
     schedule,
-    scheduleSuccessor(baseDirectory, buildId, name, once) {
+    scheduleSuccessor(baseDirectory, buildId, name) {
       const successor = pipeline[pipeline.indexOf(name) + 1];
 
       if ("string" === typeof successor) {
-        schedule(baseDirectory, successor, buildId, once);
+        schedule(baseDirectory, successor, buildId);
 
         return true;
       }

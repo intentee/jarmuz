@@ -37,16 +37,15 @@ export function keepWorkerAlive({ path, onMessage }) {
     postMessage(data) {
       if (state.isTerminated) {
         throw new Error(`Worker(${name}) is terminated`);
-      } else if (!state.worker) {
-        throw new Error(`Worker(${name}) is not ready`);
-      } else {
-        state.worker.postMessage(data);
       }
+
+      state.worker.postMessage(data);
     },
     terminate() {
       state.isTerminated = true;
       state.worker.off("message", onMessage);
-      state.worker.terminate();
+
+      return state.worker.terminate();
     },
   });
 }
