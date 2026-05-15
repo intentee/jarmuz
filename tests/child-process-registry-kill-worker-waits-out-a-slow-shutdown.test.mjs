@@ -24,38 +24,44 @@ test("child-process-registry kill-worker waits out a child with a slow SIGTERM s
     return tempDirectory.cleanup();
   });
 
-  const victim = spawn(process.execPath, [delayedShutdownScript, pidFile]);
+  const delayedShutdownProcess = spawn(process.execPath, [
+    delayedShutdownScript,
+    pidFile,
+  ]);
 
   t.after(function () {
-    if (victim.exitCode === null && victim.signalCode === null) {
-      victim.kill("SIGKILL");
+    if (
+      delayedShutdownProcess.exitCode === null &&
+      delayedShutdownProcess.signalCode === null
+    ) {
+      delayedShutdownProcess.kill("SIGKILL");
     }
   });
 
-  await once(victim, "spawn");
-  assert.equal(typeof victim.pid, "number");
+  await once(delayedShutdownProcess, "spawn");
+  assert.equal(typeof delayedShutdownProcess.pid, "number");
 
   await waitForFileContent(pidFile, function (content) {
     return content.length > 0;
   });
   const reportedPid = Number((await readFile(pidFile, "utf8")).trim());
-  assert.equal(reportedPid, victim.pid);
+  assert.equal(reportedPid, delayedShutdownProcess.pid);
 
   const registry = childProcessRegistry();
   registry.registerWorker("delayed-worker");
-  registry.addChild("delayed-worker", victim.pid);
+  registry.addChild("delayed-worker", delayedShutdownProcess.pid);
 
   const start = process.hrtime.bigint();
   registry.killWorker("delayed-worker");
 
-  await once(victim, "exit");
+  await once(delayedShutdownProcess, "exit");
   const elapsedMs = Number(process.hrtime.bigint() - start) / 1_000_000;
 
-  assert.equal(victim.exitCode, 0);
-  assert.equal(victim.signalCode, null);
+  assert.equal(delayedShutdownProcess.exitCode, 0);
+  assert.equal(delayedShutdownProcess.signalCode, null);
   assert.ok(
     elapsedMs >= 90,
-    "expected the victim to take ~100ms to shut down after SIGTERM (got " +
+    "expected the delayed-shutdown process to take ~100ms to shut down after SIGTERM (got " +
       elapsedMs +
       "ms)",
   );

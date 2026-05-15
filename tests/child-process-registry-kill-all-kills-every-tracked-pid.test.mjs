@@ -3,30 +3,30 @@ import { once } from "node:events";
 import { test } from "node:test";
 
 import { childProcessRegistry } from "../src/libs/child-process-registry.mjs";
-import { spawnVictimProcess } from "./support/spawn-victim-process.mjs";
+import { spawnIdleProcess } from "./support/spawn-idle-process.mjs";
 
 test("child-process-registry kill-all kills every tracked PID", async function (t) {
-  const victimA = spawnVictimProcess();
-  const victimB = spawnVictimProcess();
+  const idleProcessA = spawnIdleProcess();
+  const idleProcessB = spawnIdleProcess();
 
   t.after(function () {
-    victimA.kill("SIGKILL");
-    victimB.kill("SIGKILL");
+    idleProcessA.kill("SIGKILL");
+    idleProcessB.kill("SIGKILL");
   });
 
-  await Promise.all([once(victimA, "spawn"), once(victimB, "spawn")]);
-  assert.equal(typeof victimA.pid, "number");
-  assert.equal(typeof victimB.pid, "number");
+  await Promise.all([once(idleProcessA, "spawn"), once(idleProcessB, "spawn")]);
+  assert.equal(typeof idleProcessA.pid, "number");
+  assert.equal(typeof idleProcessB.pid, "number");
 
   const registry = childProcessRegistry();
   registry.registerWorker("worker-a");
   registry.registerWorker("worker-b");
-  registry.addChild("worker-a", victimA.pid);
-  registry.addChild("worker-b", victimB.pid);
+  registry.addChild("worker-a", idleProcessA.pid);
+  registry.addChild("worker-b", idleProcessB.pid);
 
   registry.killAll();
 
-  await Promise.all([once(victimA, "exit"), once(victimB, "exit")]);
-  assert.equal(victimA.signalCode, "SIGTERM");
-  assert.equal(victimB.signalCode, "SIGTERM");
+  await Promise.all([once(idleProcessA, "exit"), once(idleProcessB, "exit")]);
+  assert.equal(idleProcessA.signalCode, "SIGTERM");
+  assert.equal(idleProcessB.signalCode, "SIGTERM");
 });
