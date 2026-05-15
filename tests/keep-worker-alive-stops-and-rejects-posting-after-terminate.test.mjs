@@ -19,11 +19,11 @@ test("keepWorkerAlive stops the worker and rejects posting after terminate", asy
 
   assert.throws(
     function () {
-      handle.postMessage(
-        /** @type {import("../src/libs/worker-port.mjs").BuildMessage} */ ({
-          ping: "hello",
-        }),
-      );
+      handle.postMessage({
+        baseDirectory: "/tmp",
+        buildId: "build-1",
+        name: "worker-echo",
+      });
     },
     function (error) {
       return (

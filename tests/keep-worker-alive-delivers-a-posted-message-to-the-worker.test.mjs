@@ -19,12 +19,16 @@ test("keepWorkerAlive delivers a posted message to the worker", async function (
       return handle.terminate();
     });
 
-    handle.postMessage(
-      /** @type {import("../src/libs/worker-port.mjs").BuildMessage} */ ({
-        ping: "hello",
-      }),
-    );
+    handle.postMessage({
+      baseDirectory: "/tmp",
+      buildId: "build-1",
+      name: "worker-echo",
+    });
   });
 
-  assert.deepEqual(await received, { ping: "hello" });
+  assert.deepEqual(await received, {
+    baseDirectory: "/tmp",
+    buildId: "build-1",
+    name: "worker-echo",
+  });
 });
