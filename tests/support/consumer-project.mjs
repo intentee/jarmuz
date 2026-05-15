@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, rm, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -9,21 +9,22 @@ const repositoryRoot = join(
   "..",
 );
 
-export async function makeConsumerProject({ workers }) {
+export async function copyConsumerProject(projectName) {
+  const sourceDirectory = join(
+    dirname(fileURLToPath(import.meta.url)),
+    "..",
+    "fixtures",
+    "projects",
+    projectName,
+  );
+
   const baseDirectory = await mkdtemp(join(tmpdir(), "jarmuz-project-"));
   const watchedDirectory = join(baseDirectory, "watched");
 
-  await mkdir(join(baseDirectory, "jarmuz"));
+  await cp(sourceDirectory, baseDirectory, { recursive: true });
   await mkdir(join(baseDirectory, "node_modules"));
-  await mkdir(watchedDirectory);
   await symlink(repositoryRoot, join(baseDirectory, "node_modules", "jarmuz"));
-
-  for (const { name, source } of workers) {
-    await writeFile(
-      join(baseDirectory, "jarmuz", `worker-${name}.mjs`),
-      source,
-    );
-  }
+  await mkdir(watchedDirectory, { recursive: true });
 
   return {
     baseDirectory,

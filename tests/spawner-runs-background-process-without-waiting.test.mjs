@@ -7,7 +7,7 @@ import { createWorker } from "./support/create-worker.mjs";
 import { drainWorker } from "./support/drain-worker.mjs";
 import { makeTempDirectory } from "./support/temp-directory.mjs";
 import { waitForFileContent } from "./support/wait-for-file-content.mjs";
-import { waitForMessage } from "./support/wait-for-message.mjs";
+import { waitForBuildResult } from "./support/wait-for-build-result.mjs";
 
 test("spawner runs a background process without waiting for it to finish", async function (t) {
   const tempDirectory = await makeTempDirectory();
@@ -30,7 +30,7 @@ test("spawner runs a background process without waiting for it to finish", async
     name: "server",
   });
 
-  const result = await waitForMessage(worker);
+  const result = await waitForBuildResult(worker);
 
   assert.equal(result.success, true);
 

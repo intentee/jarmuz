@@ -1,6 +1,9 @@
+import assert from "node:assert/strict";
 import spawn from "cross-spawn";
 import { parseArgsStringToArgv } from "string-argv";
 
+import { DuplicateKeepAliveError } from "../libs/duplicate-keep-alive-error.mjs";
+import { workerPort } from "../libs/worker-port.mjs";
 import { basic } from "./basic.mjs";
 
 /**
@@ -9,34 +12,51 @@ import { basic } from "./basic.mjs";
  * }} PersistContext
  */
 
-/** @type {Set<string>} */
-const running = new Set();
-
 /**
  * @param {(context: PersistContext) => unknown} build
  */
 export function persist(build) {
+  const port = workerPort();
+
+  /** @type {Set<import("node:child_process").ChildProcess>} */
+  const runningProcesses = new Set();
+  /** @type {WeakSet<import("node:child_process").ChildProcess>} */
+  const intentionallyKilled = new WeakSet();
+
   /**
    * @param {{ args: string[]; baseDirectory: string; command: string }} input
    */
-  function run({ args, baseDirectory, command }) {
+  function startWithRestart({ args, baseDirectory, command }) {
     const proc = spawn(command, args, {
       cwd: baseDirectory,
       stdio: "inherit",
     });
 
-    proc.once("spawn", function () {
-      console.debug(`jarmuz: Process(${proc.pid}) was spawned.`);
-    });
+    runningProcesses.add(proc);
+
+    const pid = proc.pid;
+
+    assert(typeof pid === "number");
+
+    console.debug(`jarmuz: Process(${pid}) was spawned.`);
+    port.postChildSpawned(pid);
 
     proc.once("close", function (code) {
+      runningProcesses.delete(proc);
+
+      if (intentionallyKilled.has(proc)) {
+        console.debug(`jarmuz: Process(${pid}) was killed.`);
+
+        return;
+      }
+
       console.debug(
         null === code
-          ? `jarmuz: Process(${proc.pid}) was killed; restarting`
-          : `jarmuz: Process(${proc.pid}) exited with code ${code}; restarting`,
+          ? `jarmuz: Process(${pid}) was killed; restarting.`
+          : `jarmuz: Process(${pid}) exited with code ${code}; restarting.`,
       );
 
-      run({
+      startWithRestart({
         args,
         baseDirectory,
         command,
@@ -44,18 +64,35 @@ export function persist(build) {
     });
   }
 
+  /** @returns {Promise<void>} */
+  async function abort() {
+    for (const proc of Array.from(runningProcesses)) {
+      intentionallyKilled.add(proc);
+
+      await new Promise(function (resolve) {
+        proc.once("close", resolve);
+        proc.kill("SIGTERM");
+      });
+    }
+  }
+
   return basic(async function ({ buildId, baseDirectory, ...rest }) {
+    await abort();
+
+    /** @type {Set<string>} */
+    const startedThisBuild = new Set();
+
     /** @param {string} exec */
     function keepAlive(exec) {
-      if (running.has(exec)) {
-        return;
+      if (startedThisBuild.has(exec)) {
+        throw new DuplicateKeepAliveError(exec);
       }
 
-      running.add(exec);
+      startedThisBuild.add(exec);
 
       const [command, ...args] = parseArgsStringToArgv(exec);
 
-      return run({
+      startWithRestart({
         args,
         baseDirectory,
         command,

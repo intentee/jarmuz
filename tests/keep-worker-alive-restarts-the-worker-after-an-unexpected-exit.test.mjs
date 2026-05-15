@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
+import { childProcessRegistry } from "../src/libs/child-process-registry.mjs";
 import { keepWorkerAlive } from "../src/libs/keep-worker-alive.mjs";
 import { makeTempDirectory } from "./support/temp-directory.mjs";
 
@@ -32,6 +33,7 @@ test("keepWorkerAlive restarts the worker after an unexpected exit", async funct
         new URL("./fixtures/workers/worker-crashes-once.mjs", import.meta.url),
       ),
       onMessage: resolve,
+      registry: childProcessRegistry(),
     });
   });
 

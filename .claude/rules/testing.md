@@ -1,3 +1,9 @@
+---
+paths:
+  - "Makefile"
+  - "tests/**/*.mjs"
+---
+
 # Unit Tests and Quality Control
 
 - Always check that the unit tests pass.
@@ -12,3 +18,15 @@
 - Tests must exercise actual functionality and observable behavior. Never write a test purely to hit lines for the sake of coverage.
 - Design tests deliberately before writing them. Identify the feature or branch under test, then write the smallest test that verifies it.
 - Coverage gaps signal missing tests, never permission to exclude files. Write the test instead of suppressing the gap.
+
+# On Monkeypatching, and Mocks
+
+- Never use monkeypatching.
+- Never use mocks (you can use fixtures, however).
+- Testing environment you prepare must be ephemeral.
+
+# Test Suite Budget
+
+- The entire test suite has a hard budget of 10 seconds to run. If tests take longer to run, treat that as a bug.
+- When optimizing tests to fit within a budget, make sure to preserve all the tests, and all the functionalities. You must only optimize the performance.
+- Individual tests have a budget of at most 1 second to run. If they do not, treat that as a bug, and optimize the performance.

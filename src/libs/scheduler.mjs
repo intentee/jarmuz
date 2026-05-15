@@ -1,6 +1,6 @@
 /**
  * @typedef {object} Scheduler
- * @property {(name: string, callback: () => void) => void} unique
+ * @property {(name: string, callback: () => void) => void} debounce
  */
 
 /**
@@ -13,7 +13,7 @@ export function scheduler(state) {
      * @param {string} name
      * @param {() => void} callback
      */
-    unique(name, callback) {
+    debounce(name, callback) {
       if (state.pending.has(name)) {
         clearTimeout(state.pending.get(name));
         state.pending.delete(name);

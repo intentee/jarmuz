@@ -5,10 +5,10 @@ import { join } from "node:path";
 import { test } from "node:test";
 
 import { createWorker } from "./support/create-worker.mjs";
-import { killProcess } from "./support/kill-process.mjs";
+import { killProcess } from "../src/libs/kill-process.mjs";
 import { makeTempDirectory } from "./support/temp-directory.mjs";
 import { waitForFileContent } from "./support/wait-for-file-content.mjs";
-import { waitForMessage } from "./support/wait-for-message.mjs";
+import { waitForBuildResult } from "./support/wait-for-build-result.mjs";
 
 test("spawner SIGKILLs a still-running process on the next build", async function (t) {
   const tempDirectory = await makeTempDirectory();
@@ -37,7 +37,7 @@ test("spawner SIGKILLs a still-running process on the next build", async functio
     name: "server",
   });
 
-  await waitForMessage(worker);
+  await waitForBuildResult(worker);
 
   childPid = Number(
     await waitForFileContent(pidFile, function (content) {

@@ -39,7 +39,7 @@ export function managePipeline(state, scheduler, pipeline) {
       return;
     }
 
-    scheduler.unique(name, function () {
+    scheduler.debounce(name, function () {
       if (hasPendingPredecessor(state, predecessors)) {
         state.pending.delete(name);
       } else {

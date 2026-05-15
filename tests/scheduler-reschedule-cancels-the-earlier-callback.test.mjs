@@ -9,12 +9,12 @@ test("scheduler reschedule cancels the earlier callback so only the latest runs"
 
   let firstCallbackRan = false;
 
-  schedule.unique("compile", function () {
+  schedule.debounce("compile", function () {
     firstCallbackRan = true;
   });
 
   await new Promise(function (resolve) {
-    schedule.unique("compile", resolve);
+    schedule.debounce("compile", resolve);
   });
 
   assert.equal(firstCallbackRan, false);

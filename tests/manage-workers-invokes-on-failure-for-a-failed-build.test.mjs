@@ -2,12 +2,13 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
+import { childProcessRegistry } from "../src/libs/child-process-registry.mjs";
 import { manageWorkers } from "../src/libs/manage-workers.mjs";
 
 test("manageWorkers invokes onFailure and clears pending for a failed build", async function (t) {
   const baseDirectory = fileURLToPath(new URL("./fixtures", import.meta.url));
   const state = { pending: new Map(), workers: new Map() };
-  const workers = manageWorkers(baseDirectory, state);
+  const workers = manageWorkers(baseDirectory, state, childProcessRegistry());
 
   t.after(function () {
     workers.stopAll();

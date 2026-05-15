@@ -2,12 +2,13 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
+import { childProcessRegistry } from "../src/libs/child-process-registry.mjs";
 import { manageWorkers } from "../src/libs/manage-workers.mjs";
 
 test("manageWorkers stopAll terminates every worker and empties the registry", function () {
   const baseDirectory = fileURLToPath(new URL("./fixtures", import.meta.url));
   const state = { pending: new Map(), workers: new Map() };
-  const workers = manageWorkers(baseDirectory, state);
+  const workers = manageWorkers(baseDirectory, state, childProcessRegistry());
 
   workers.start({
     name: "reports-success",

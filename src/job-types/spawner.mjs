@@ -1,7 +1,9 @@
+import assert from "node:assert/strict";
 import spawn from "cross-spawn";
 import { exec as nodeExec } from "node:child_process";
 import { parseArgsStringToArgv } from "string-argv";
 
+import { workerPort } from "../libs/worker-port.mjs";
 import { basic } from "./basic.mjs";
 
 /**
@@ -20,6 +22,8 @@ import { basic } from "./basic.mjs";
  * @param {(context: SpawnerContext) => unknown} build
  */
 export function spawner(build) {
+  const port = workerPort();
+
   let abortController = new AbortController();
   /** @type {Set<import("node:child_process").ChildProcess>} */
   const running = new Set();
@@ -51,9 +55,12 @@ export function spawner(build) {
   function register({ background, proc }) {
     running.add(proc);
 
-    proc.once("spawn", function () {
-      console.debug(`jarmuz: Process(${proc.pid}) was spawned.`);
-    });
+    const pid = proc.pid;
+
+    assert(typeof pid === "number");
+
+    console.debug(`jarmuz: Process(${pid}) was spawned.`);
+    port.postChildSpawned(pid);
 
     return new Promise(function (resolve) {
       proc.once("close", function (code) {
@@ -82,7 +89,7 @@ export function spawner(build) {
      * @param {{ background: boolean; exec: string }} input
      * @returns {Promise<boolean | void>}
      */
-    function registerProc({ background, exec }) {
+    function spawnAndRegister({ background, exec }) {
       const [command, ...args] = parseArgsStringToArgv(exec);
       const proc = spawn(command, args, {
         cwd: baseDirectory,
@@ -100,7 +107,7 @@ export function spawner(build) {
      * @returns {Promise<void>}
      */
     async function background(exec) {
-      await registerProc({ background: true, exec });
+      await spawnAndRegister({ background: true, exec });
     }
 
     /**
@@ -108,7 +115,7 @@ export function spawner(build) {
      * @returns {Promise<boolean | void>}
      */
     function command(exec) {
-      return registerProc({ background: false, exec });
+      return spawnAndRegister({ background: false, exec });
     }
 
     /**
