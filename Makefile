@@ -20,7 +20,7 @@ format: $(NODE_MODULES)
 
 .PHONY: test
 test: $(NODE_MODULES)
-	node --test '$(TEST_GLOB)'
+	timeout 10 node --test --test-timeout=1000 '$(TEST_GLOB)'
 
 .PHONY: type-coverage
 type-coverage: $(NODE_MODULES)

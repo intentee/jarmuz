@@ -13,10 +13,10 @@ test("manage-pipeline callback drops the job when a predecessor becomes pending 
 
   assert.equal(state.pending.has("bundle"), true);
 
-  schedule.unique("compile", function () {});
+  schedule.debounce("compile", function () {});
 
   await new Promise(function (resolve) {
-    schedule.unique("debounce-sentinel", resolve);
+    schedule.debounce("debounce-sentinel", resolve);
   });
 
   assert.equal(state.pending.has("bundle"), false);

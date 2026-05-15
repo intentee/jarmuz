@@ -9,7 +9,7 @@ test("manage-pipeline schedule skips when an earlier pipeline job is pending", f
   const schedule = scheduler(state);
   const pipeline = managePipeline(state, schedule, ["compile", "bundle"]);
 
-  schedule.unique("compile", function () {});
+  schedule.debounce("compile", function () {});
 
   pipeline.schedule("/project", "bundle", "build-1");
 

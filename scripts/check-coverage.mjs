@@ -3,10 +3,14 @@ import { spawnSync } from "node:child_process";
 const DEFAULT_TEST_GLOB = "tests/**/*.test.mjs";
 
 export function checkCoverage(testGlob = DEFAULT_TEST_GLOB) {
-  const result = spawnSync("npx", ["c8", "node", "--test", testGlob], {
-    shell: false,
-    stdio: "inherit",
-  });
+  const result = spawnSync(
+    "npx",
+    ["c8", "node", "--test", "--test-timeout=1000", testGlob],
+    {
+      shell: false,
+      stdio: "inherit",
+    },
+  );
 
   if (result.error) {
     throw result.error;

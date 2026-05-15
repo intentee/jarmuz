@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
+import { childProcessRegistry } from "../src/libs/child-process-registry.mjs";
 import { keepWorkerAlive } from "../src/libs/keep-worker-alive.mjs";
 import { TerminatedWorkerError } from "../src/libs/terminated-worker-error.mjs";
 
@@ -11,13 +12,18 @@ test("keepWorkerAlive stops the worker and rejects posting after terminate", asy
       new URL("./fixtures/workers/worker-echo.mjs", import.meta.url),
     ),
     onMessage: function () {},
+    registry: childProcessRegistry(),
   });
 
   await handle.terminate();
 
   assert.throws(
     function () {
-      handle.postMessage({ ping: "hello" });
+      handle.postMessage(
+        /** @type {import("../src/libs/worker-port.mjs").BuildMessage} */ ({
+          ping: "hello",
+        }),
+      );
     },
     function (error) {
       return (

@@ -8,7 +8,7 @@ test("scheduler runs a uniquely scheduled callback after the debounce window", a
   const schedule = scheduler(state);
 
   await new Promise(function (resolve) {
-    schedule.unique("compile", resolve);
+    schedule.debounce("compile", resolve);
   });
 
   assert.equal(state.pending.has("compile"), true);

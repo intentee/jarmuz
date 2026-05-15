@@ -2,9 +2,14 @@ import chokidar from "chokidar";
 import { minimatch } from "minimatch";
 import { nanoid } from "nanoid";
 
+import { childProcessRegistry } from "./child-process-registry.mjs";
 import { managePipeline } from "./manage-pipeline.mjs";
 import { manageWorkers } from "./manage-workers.mjs";
 import { scheduler } from "./scheduler.mjs";
+
+function exitOnSignal() {
+  process.exit();
+}
 
 /**
  * @typedef {object} JarmuzOptions
@@ -51,8 +56,16 @@ export function jarmuz({
     workers: new Map(),
   };
 
+  const registry = childProcessRegistry();
+
+  process.once("exit", function () {
+    registry.killAll();
+  });
+  process.once("SIGINT", exitOnSignal);
+  process.once("SIGTERM", exitOnSignal);
+
   const schedule = scheduler(state);
-  const workers = manageWorkers(baseDirectory, state);
+  const workers = manageWorkers(baseDirectory, state, registry);
   const pipelineManager = managePipeline(state, schedule, pipeline);
 
   for (const name of pipeline) {

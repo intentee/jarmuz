@@ -5,7 +5,7 @@ import { createWorker } from "./create-worker.mjs";
 import { drainWorker } from "./drain-worker.mjs";
 import { makeTempDirectory } from "./temp-directory.mjs";
 import { waitForFileContent } from "./wait-for-file-content.mjs";
-import { waitForMessage } from "./wait-for-message.mjs";
+import { waitForBuildResult } from "./wait-for-build-result.mjs";
 
 export async function runPersistRestartScenario(t, fixtureName) {
   const tempDirectory = await makeTempDirectory();
@@ -28,7 +28,7 @@ export async function runPersistRestartScenario(t, fixtureName) {
     name: "server",
   });
 
-  await waitForMessage(worker);
+  await waitForBuildResult(worker);
 
   await waitForFileContent(resultFile, function (content) {
     return content.split("\n").filter(Boolean).length >= 2;

@@ -18,23 +18,36 @@ import { keepWorkerAlive } from "./keep-worker-alive.mjs";
 /**
  * @param {string} baseDirectory
  * @param {import("./jarmuz.mjs").State} state
+ * @param {import("./child-process-registry.mjs").ChildProcessRegistry} registry
  */
-export function manageWorkers(baseDirectory, state) {
+export function manageWorkers(baseDirectory, state, registry) {
   /** @param {StartOptions} options */
   function start({ name, onFailure, onSuccess }) {
     state.workers.set(
       name,
       keepWorkerAlive({
-        path: `${baseDirectory}/jarmuz/worker-${name}.mjs`,
-        onMessage({ baseDirectory, buildId, success }) {
+        onMessage(rawMessage) {
+          /** @type {import("./worker-port.mjs").BuildResultMessage} */
+          const message = /** @type {import("./worker-port.mjs").BuildResultMessage} */ (
+            rawMessage
+          );
+
           state.pending.delete(name);
 
-          if (success) {
-            onSuccess({ baseDirectory, buildId });
+          if (message.success) {
+            onSuccess({
+              baseDirectory: message.baseDirectory,
+              buildId: message.buildId,
+            });
           } else {
-            onFailure({ baseDirectory, buildId });
+            onFailure({
+              baseDirectory: message.baseDirectory,
+              buildId: message.buildId,
+            });
           }
         },
+        path: `${baseDirectory}/jarmuz/worker-${name}.mjs`,
+        registry,
       }),
     );
   }

@@ -4,14 +4,11 @@ import { join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { makeConsumerProject } from "./support/consumer-project.mjs";
+import { copyConsumerProject } from "./support/consumer-project.mjs";
 import { runNodeScript } from "./support/run-node-script.mjs";
-import { touchFileWorkerSource } from "./support/consumer-worker-sources.mjs";
 
 test("jarmuz defaults the base directory to the working directory", async function (t) {
-  const consumerProject = await makeConsumerProject({
-    workers: [{ name: "touch-file", source: touchFileWorkerSource }],
-  });
+  const consumerProject = await copyConsumerProject("touch-file");
   const resultFile = join(consumerProject.baseDirectory, "result.txt");
 
   t.after(function () {

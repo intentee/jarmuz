@@ -3,14 +3,11 @@ import { join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { makeConsumerProject } from "./support/consumer-project.mjs";
+import { copyConsumerProject } from "./support/consumer-project.mjs";
 import { runNodeScript } from "./support/run-node-script.mjs";
-import { failingWorkerSource } from "./support/consumer-worker-sources.mjs";
 
 test("jarmuz once mode exits with code 1 when a job fails", async function (t) {
-  const consumerProject = await makeConsumerProject({
-    workers: [{ name: "bad", source: failingWorkerSource }],
-  });
+  const consumerProject = await copyConsumerProject("bad-job");
   const resultFile = join(consumerProject.baseDirectory, "result.txt");
 
   t.after(function () {

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
+import { childProcessRegistry } from "../src/libs/child-process-registry.mjs";
 import { keepWorkerAlive } from "../src/libs/keep-worker-alive.mjs";
 import { managePipeline } from "../src/libs/manage-pipeline.mjs";
 import { scheduler } from "../src/libs/scheduler.mjs";
@@ -16,6 +17,7 @@ test("manage-pipeline callback posts the build message to the registered worker"
         new URL("./fixtures/workers/worker-echo.mjs", import.meta.url),
       ),
       onMessage: resolve,
+      registry: childProcessRegistry(),
     });
 
     t.after(function () {

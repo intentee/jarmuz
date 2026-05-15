@@ -4,17 +4,11 @@ import { join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { makeConsumerProject } from "./support/consumer-project.mjs";
+import { copyConsumerProject } from "./support/consumer-project.mjs";
 import { runNodeScript } from "./support/run-node-script.mjs";
-import { touchFileWorkerSource } from "./support/consumer-worker-sources.mjs";
 
 test("jarmuz once mode runs the whole pipeline after the watcher is ready", async function (t) {
-  const consumerProject = await makeConsumerProject({
-    workers: [
-      { name: "first", source: touchFileWorkerSource },
-      { name: "second", source: touchFileWorkerSource },
-    ],
-  });
+  const consumerProject = await copyConsumerProject("two-stage-pipeline");
   const resultFile = join(consumerProject.baseDirectory, "result.txt");
 
   t.after(function () {
