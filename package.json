@@ -1,13 +1,14 @@
 {
   "name": "jarmuz",
-  "version": "0.8.0",
+  "version": "0.10.0",
   "description": "Opinionated build automation tool",
   "exports": {
     ".": "./src/index.mjs",
     "./job-types": "./src/job-types/index.mjs"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "coverage": "make coverage",
+    "test": "make test"
   },
   "repository": {
     "type": "git",
@@ -19,16 +20,25 @@
     "url": "https://github.com/intentee/jarmuz/issues"
   },
   "homepage": "https://github.com/intentee/jarmuz#readme",
+  "engines": {
+    "node": ">=24.0.0"
+  },
   "dependencies": {
-    "chokidar": "^4.0.3",
-    "cross-spawn": "^7.0.6",
-    "minimatch": "^10.0.3",
-    "nanoid": "^5.1.5",
-    "string-argv": "^0.3.2"
+    "chokidar": "4.0.3",
+    "cross-spawn": "7.0.6",
+    "minimatch": "10.2.5",
+    "nanoid": "5.1.5",
+    "string-argv": "0.3.2"
   },
   "sideEffects": false,
   "type": "module",
   "devDependencies": {
-    "prettier-plugin-organize-imports": "^4.2.0"
+    "@types/cross-spawn": "6.0.6",
+    "@types/node": "25.8.0",
+    "c8": "11.0.0",
+    "prettier": "3.8.3",
+    "prettier-plugin-organize-imports": "4.2.0",
+    "type-coverage": "2.29.7",
+    "typescript": "6.0.3"
   }
 }

@@ -1,3 +1,11 @@
+import { UnknownJobError } from "./unknown-job-error.mjs";
+import { WorkerNotRunningError } from "./worker-not-running-error.mjs";
+
+/**
+ * @param {import("./jarmuz.mjs").State} state
+ * @param {string[]} predecessors
+ * @returns {boolean}
+ */
 function hasPendingPredecessor(state, predecessors) {
   for (const predecessor of predecessors) {
     if (state.pending.has(predecessor)) {
@@ -8,10 +16,20 @@ function hasPendingPredecessor(state, predecessors) {
   return false;
 }
 
+/**
+ * @param {import("./jarmuz.mjs").State} state
+ * @param {import("./scheduler.mjs").Scheduler} scheduler
+ * @param {string[]} pipeline
+ */
 export function managePipeline(state, scheduler, pipeline) {
+  /**
+   * @param {string} baseDirectory
+   * @param {string} name
+   * @param {string} buildId
+   */
   function schedule(baseDirectory, name, buildId) {
     if (-1 === pipeline.indexOf(name)) {
-      throw new Error(`Unknown job: ${name}`);
+      throw new UnknownJobError(name);
     }
 
     const predecessors = pipeline.slice(0, pipeline.indexOf(name));
@@ -25,11 +43,13 @@ export function managePipeline(state, scheduler, pipeline) {
       if (hasPendingPredecessor(state, predecessors)) {
         state.pending.delete(name);
       } else {
-        if (!state.workers.has(name)) {
-          throw new Error(`Worker is not running: "${name}"`);
+        const worker = state.workers.get(name);
+
+        if (worker === undefined) {
+          throw new WorkerNotRunningError(name);
         }
 
-        state.workers.get(name).postMessage({
+        worker.postMessage({
           baseDirectory,
           buildId,
           name,
@@ -40,11 +60,17 @@ export function managePipeline(state, scheduler, pipeline) {
 
   return Object.freeze({
     schedule,
-    scheduleSuccessor(baseDirectory, buildId, name, once) {
+    /**
+     * @param {string} baseDirectory
+     * @param {string} buildId
+     * @param {string} name
+     * @returns {boolean}
+     */
+    scheduleSuccessor(baseDirectory, buildId, name) {
       const successor = pipeline[pipeline.indexOf(name) + 1];
 
       if ("string" === typeof successor) {
-        schedule(baseDirectory, successor, buildId, once);
+        schedule(baseDirectory, successor, buildId);
 
         return true;
       }
