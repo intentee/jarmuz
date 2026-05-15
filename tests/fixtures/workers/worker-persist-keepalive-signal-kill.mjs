@@ -1,9 +1,8 @@
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { parentPort } from "node:worker_threads";
-import { takeCoverage } from "node:v8";
 
 import { persist } from "../../../src/job-types/persist.mjs";
+import { exitWorkerOnDrain } from "../../support/exit-worker-on-drain.mjs";
 
 const appendAndSelfKillScript = join(
   dirname(fileURLToPath(import.meta.url)),
@@ -26,9 +25,4 @@ persist(async function ({ keepAlive }) {
   );
 });
 
-parentPort.on("message", function ({ drain }) {
-  if (drain) {
-    takeCoverage();
-    process.exit(0);
-  }
-});
+exitWorkerOnDrain();

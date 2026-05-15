@@ -3,9 +3,22 @@ import { parseArgsStringToArgv } from "string-argv";
 
 import { basic } from "./basic.mjs";
 
+/**
+ * @typedef {import("./basic.mjs").BasicContext & {
+ *   keepAlive: (exec: string) => void;
+ * }} PersistContext
+ */
+
+/** @type {Set<string>} */
 const running = new Set();
 
+/**
+ * @param {(context: PersistContext) => unknown} build
+ */
 export function persist(build) {
+  /**
+   * @param {{ args: string[]; baseDirectory: string; command: string }} input
+   */
   function run({ args, baseDirectory, command }) {
     const proc = spawn(command, args, {
       cwd: baseDirectory,
@@ -32,6 +45,7 @@ export function persist(build) {
   }
 
   return basic(async function ({ buildId, baseDirectory, ...rest }) {
+    /** @param {string} exec */
     function keepAlive(exec) {
       if (running.has(exec)) {
         return;

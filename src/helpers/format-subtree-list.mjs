@@ -1,3 +1,13 @@
+/**
+ * @typedef {object} SubtreeList
+ * @property {string} title
+ * @property {string[]} items
+ */
+
+/**
+ * @param {SubtreeList} subtreeList
+ * @returns {string[]}
+ */
 export function formatSubtreeList({ title, items }) {
   const sortedItems = [...items].sort();
   const lines = [`└── ${title}:`];

@@ -6,6 +6,38 @@ import { managePipeline } from "./manage-pipeline.mjs";
 import { manageWorkers } from "./manage-workers.mjs";
 import { scheduler } from "./scheduler.mjs";
 
+/**
+ * @typedef {object} JarmuzOptions
+ * @property {string} [baseDirectory]
+ * @property {string[]} [ignore]
+ * @property {boolean} [once]
+ * @property {string[]} pipeline
+ * @property {string | string[]} watch
+ */
+
+/**
+ * Internal shared state passed to scheduler / manage-pipeline / manage-workers.
+ *
+ * @typedef {object} State
+ * @property {Map<string, NodeJS.Timeout>} pending
+ * @property {Map<string, import("./keep-worker-alive.mjs").WorkerHandle>} workers
+ */
+
+/**
+ * @typedef {object} DeciderContext
+ * @property {string} baseDirectory
+ * @property {boolean} initial
+ * @property {(pattern: string) => boolean} matches
+ * @property {(name: string) => void} schedule
+ */
+
+/**
+ * @typedef {(context: DeciderContext) => void} Decider
+ */
+
+/**
+ * @param {JarmuzOptions} options
+ */
 export function jarmuz({
   baseDirectory = process.cwd(),
   ignore = [],
@@ -13,6 +45,7 @@ export function jarmuz({
   pipeline,
   watch,
 }) {
+  /** @type {State} */
   const state = {
     pending: new Map(),
     workers: new Map(),
@@ -44,10 +77,13 @@ export function jarmuz({
   }
 
   return {
+    /** @param {Decider} decider */
     decide(decider) {
+      /** @type {Set<string>} */
       const toBeScheduled = new Set();
       const watcher = chokidar.watch(watch);
 
+      /** @param {string} name */
       function schedule(name) {
         if (once) {
           toBeScheduled.add(name);

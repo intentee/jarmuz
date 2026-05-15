@@ -3,6 +3,7 @@ import { test } from "node:test";
 
 import { managePipeline } from "../src/libs/manage-pipeline.mjs";
 import { scheduler } from "../src/libs/scheduler.mjs";
+import { WorkerNotRunningError } from "../src/libs/worker-not-running-error.mjs";
 
 test("manage-pipeline callback throws when the target worker is not registered", async function () {
   const state = { pending: new Map(), workers: new Map() };
@@ -22,5 +23,6 @@ test("manage-pipeline callback throws when the target worker is not registered",
     process.on("uncaughtException", listener);
   }
 
-  assert.equal(error.message, 'Worker is not running: "compile"');
+  assert.ok(error instanceof WorkerNotRunningError);
+  assert.equal(error.workerName, "compile");
 });

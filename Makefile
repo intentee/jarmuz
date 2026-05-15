@@ -21,3 +21,11 @@ format: $(NODE_MODULES)
 .PHONY: test
 test: $(NODE_MODULES)
 	node --test '$(TEST_GLOB)'
+
+.PHONY: type-coverage
+type-coverage: $(NODE_MODULES)
+	npx type-coverage --at-least 100 --strict --detail
+
+.PHONY: typecheck
+typecheck: $(NODE_MODULES)
+	npx tsc

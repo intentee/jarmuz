@@ -3,6 +3,7 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { keepWorkerAlive } from "../src/libs/keep-worker-alive.mjs";
+import { TerminatedWorkerError } from "../src/libs/terminated-worker-error.mjs";
 
 test("keepWorkerAlive stops the worker and rejects posting after terminate", async function () {
   const handle = keepWorkerAlive({
@@ -18,6 +19,11 @@ test("keepWorkerAlive stops the worker and rejects posting after terminate", asy
     function () {
       handle.postMessage({ ping: "hello" });
     },
-    { message: "Worker(worker-echo) is terminated" },
+    function (error) {
+      return (
+        error instanceof TerminatedWorkerError &&
+        error.workerName === "worker-echo"
+      );
+    },
   );
 });

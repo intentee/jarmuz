@@ -1,8 +1,7 @@
 import { appendFile } from "node:fs/promises";
-import { parentPort } from "node:worker_threads";
-import { takeCoverage } from "node:v8";
 
 import { spawner } from "../../../src/job-types/spawner.mjs";
+import { exitWorkerOnDrain } from "../../support/exit-worker-on-drain.mjs";
 
 let alreadyBuilt = false;
 
@@ -24,9 +23,4 @@ spawner(async function ({ exec }) {
   }
 });
 
-parentPort.on("message", function ({ drain }) {
-  if (drain) {
-    takeCoverage();
-    process.exit(0);
-  }
-});
+exitWorkerOnDrain();

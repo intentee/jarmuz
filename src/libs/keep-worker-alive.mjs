@@ -1,51 +1,86 @@
 import { basename } from "node:path";
 import { Worker } from "node:worker_threads";
 
-function spawnWorker(state, path, name, onMessage) {
-  const worker = new Worker(path, {
-    name,
-  });
+import { TerminatedWorkerError } from "./terminated-worker-error.mjs";
 
-  worker.once("exit", function (code) {
-    console.error(
-      state.isTerminated
-        ? `jarmuz: Worker(${name}) terminated with exit code ${code}.`
-        : `jarmuz: Worker(${name}) stopped with exit code ${code}. Restarting...`,
-    );
-    worker.off("message", onMessage);
+/**
+ * Inbound build message: jarmuż -> worker.
+ *
+ * @typedef {object} BuildMessage
+ * @property {string} baseDirectory
+ * @property {string} buildId
+ * @property {string} name
+ */
 
-    if (!state.isTerminated) {
-      spawnWorker(state, path, name, onMessage);
-    }
-  });
-  worker.on("message", onMessage);
+/**
+ * Outbound build result: worker -> jarmuż.
+ *
+ * @typedef {object} BuildResult
+ * @property {string} baseDirectory
+ * @property {string} buildId
+ * @property {boolean} success
+ */
 
-  state.isTerminated = false;
-  state.worker = worker;
-}
+/**
+ * Handle to a kept-alive worker thread, returned by `keepWorkerAlive`.
+ *
+ * @typedef {object} WorkerHandle
+ * @property {(data: BuildMessage) => void} postMessage
+ * @property {() => Promise<number>} terminate
+ */
 
+/**
+ * @param {{
+ *   path: string;
+ *   onMessage: (message: BuildResult) => void;
+ * }} options
+ * @returns {WorkerHandle}
+ */
 export function keepWorkerAlive({ path, onMessage }) {
   const name = basename(path, ".mjs");
-  const state = {
-    isTerminated: false,
-    worker: null,
-  };
+  const state = { isTerminated: false };
 
-  spawnWorker(state, path, name, onMessage);
+  /** @type {Worker} */
+  let worker;
+
+  function spawnWorker() {
+    worker = new Worker(path, {
+      name,
+    });
+
+    worker.once("exit", function (code) {
+      console.error(
+        state.isTerminated
+          ? `jarmuz: Worker(${name}) terminated with exit code ${code}.`
+          : `jarmuz: Worker(${name}) stopped with exit code ${code}. Restarting...`,
+      );
+      worker.off("message", onMessage);
+
+      if (!state.isTerminated) {
+        spawnWorker();
+      }
+    });
+    worker.on("message", onMessage);
+
+    state.isTerminated = false;
+  }
+
+  spawnWorker();
 
   return Object.freeze({
+    /** @param {BuildMessage} data */
     postMessage(data) {
       if (state.isTerminated) {
-        throw new Error(`Worker(${name}) is terminated`);
+        throw new TerminatedWorkerError(name);
       }
 
-      state.worker.postMessage(data);
+      worker.postMessage(data);
     },
     terminate() {
       state.isTerminated = true;
-      state.worker.off("message", onMessage);
+      worker.off("message", onMessage);
 
-      return state.worker.terminate();
+      return worker.terminate();
     },
   });
 }
